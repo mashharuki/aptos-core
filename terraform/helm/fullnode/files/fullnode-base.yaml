@@ -1,0 +1,37 @@
+base:
+  role: "full_node"
+  waypoint:
+    from_file: "/opt/aptos/genesis/waypoint.txt"
+
+execution:
+  genesis_file_location: "/opt/aptos/genesis/genesis.blob"
+
+full_node_networks:
+- network_id: "public"
+  discovery_method: "onchain"
+  listen_address: "/ip4/0.0.0.0/tcp/6182"
+  {{ with index $.Values.fullnode.config.full_node_networks 0 }}
+  {{ with .identity }}
+  identity: 
+    {{ . | toYaml | nindent 4 }}
+  {{ end }}
+  {{ with .seeds }}
+  seeds:
+    {{ . | toYaml | nindent 4 }}
+  {{ end }}
+  {{ with .inbound_rate_limit_config }}
+  inbound_rate_limit_config: {{ . }}
+  {{ end }}
+  {{ with .inbound_rate_limit_config }}
+  outbound_rate_limit_config: {{ . }}
+  {{ end }}
+  {{ with .max_inbound_connections }}
+  max_inbound_connections: {{ . }}
+  {{ end }}
+  {{ end }}
+
+storage:
+  backup_service_address: "0.0.0.0:6186"
+
+api:
+  address: "0.0.0.0:8080"
