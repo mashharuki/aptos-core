@@ -519,7 +519,7 @@ async fn test_register_and_update_validator() {
         .unwrap();
     assert_eq!(
         validator_config.consensus_public_key,
-        keys.consensus_public_key()
+        keys.consensus_public_key().to_string()
     );
 
     let new_port = 5678;
