@@ -10,6 +10,7 @@ use crate::{
     types::{auth::Claims, common::NodeType},
 };
 use crate::{debug, error};
+use aptos_types::chain_id::ChainId;
 use reqwest::{header::CONTENT_ENCODING, StatusCode};
 use tokio::time::Instant;
 use warp::{filters::BoxedFilter, hyper::body::Bytes, reject, reply, Filter, Rejection, Reply};
@@ -71,7 +72,16 @@ pub async fn handle_metrics_ingest(
 
     let start_timer = Instant::now();
 
-    let post_futures = context.metrics_client().values().map(|client| {
+    let filtered_clients = context.metrics_client().iter().filter(|(name, _)| {
+        if claims.chain_id.id() == 3 {
+            return true;
+        } else if claims.chain_id == ChainId::mainnet() {
+            return !name.starts_with("default");
+        }
+        name.starts_with("default")
+    });
+
+    let post_futures = filtered_clients.clone().map(|(_, client)| {
         client.post_prometheus_metrics(
             metrics_body.clone(),
             extra_labels.clone(),
@@ -82,7 +92,7 @@ pub async fn handle_metrics_ingest(
     let mut results = futures::future::join_all(post_futures)
         .await
         .into_iter()
-        .zip(context.metrics_client().keys())
+        .zip(filtered_clients.map(|(name, _)| name))
         .map(|(res, name)| {
             match res {
                 Ok(res) => {
@@ -229,11 +239,11 @@ mod test {
 
         let clients = test_context.inner.metrics_client_mut();
         clients.insert(
-            "endpoint1".into(),
+            "default1".into(),
             MetricsClient::new(Url::parse(&server1.base_url()).unwrap(), "token1".into()),
         );
         clients.insert(
-            "endpoint2".into(),
+            "default2".into(),
             MetricsClient::new(Url::parse(&server2.base_url()).unwrap(), "token2".into()),
         );
 
@@ -265,11 +275,11 @@ mod test {
 
         let clients = test_context.inner.metrics_client_mut();
         clients.insert(
-            "endpoint1".into(),
+            "default1".into(),
             MetricsClient::new(Url::parse(&server1.base_url()).unwrap(), "token1".into()),
         );
         clients.insert(
-            "endpoint2".into(),
+            "default2".into(),
             MetricsClient::new(Url::parse(&server2.base_url()).unwrap(), "token2".into()),
         );
 
@@ -301,11 +311,11 @@ mod test {
 
         let clients = test_context.inner.metrics_client_mut();
         clients.insert(
-            "endpoint1".into(),
+            "default1".into(),
             MetricsClient::new(Url::parse(&server1.base_url()).unwrap(), "token1".into()),
         );
         clients.insert(
-            "endpoint2".into(),
+            "default2".into(),
             MetricsClient::new(Url::parse(&server2.base_url()).unwrap(), "token2".into()),
         );
 
