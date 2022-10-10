@@ -216,7 +216,7 @@
         {
           "refId": "B",
           "datasource": { "type": "prometheus", "uid": "MJnqIFmVk" },
-          "expr": "aptos_state_sync_version{type=\"synced\", role=\"validator\", kubernetes_pod_name=~\".*\", chain_name=~\"3\", namespace=~\"telemetry-service\"}",
+          "expr": "aptos_state_sync_version{type=\"synced\", chain_name=~\"$chain_name\", namespace=~\"$namespace\", kubernetes_pod_name=~\"$kubernetes_pod_name\", role=~\"$role\"}",
           "intervalFactor": 1,
           "format": "time_series"
         }
@@ -1909,7 +1909,7 @@
   },
   "refresh": false,
   "schemaVersion": 37,
-  "version": 5,
+  "version": 6,
   "links": [
     {
       "title": "aptos-core",
